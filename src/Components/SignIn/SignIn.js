@@ -25,7 +25,6 @@ class SignIn extends React.Component {
                 password: this.state.signInPassword
             })
         }).then(resp => resp.json()).then(user => {
-            console.log(user)
             if (user.id) {
                 this.props.loadUser(user)
                 this.props.onRouteChange('home')

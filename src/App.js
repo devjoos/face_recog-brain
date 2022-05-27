@@ -1,6 +1,5 @@
 import React from 'react';
 import './App.css';
-import Clarifai from 'clarifai'
 import Naviagation from './Components/Navigation/Navigation';
 import Logo from './Components/Logo/Logo';
 import ImageLinkForm from './Components/ImageLinkForm/ImageLinkForm';
@@ -10,27 +9,26 @@ import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 
 
-const app = new Clarifai.App({
-  apiKey: '26f2017e6bb646bba462e7695df3741c'
-});
 
+
+const initialState = {
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  }
+}
 class App extends React.Component {
   constructor() {
     super();
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false,
-      user: {
-        id: '',
-        name: '',
-        email: '',
-        entries: 0,
-        joined: ''
-      }
-    }
+    this.state = initialState;
   }
 
 
@@ -71,8 +69,15 @@ class App extends React.Component {
 
   }
   onButtonSubmit = () => {
-    this.setState({ imageUrl: this.state.input })
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+    this.setState({ imageUrl: this.state.input });
+    fetch('http://localHost:3000/imageurl', {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: this.state.input
+      })
+    })
+      .then(response => response.json())
       .then(response => {
         if (response) {
           fetch('http://localHost:3000/image', {
@@ -90,7 +95,7 @@ class App extends React.Component {
             //     entries: count
             //   }
             // })
-          })
+          }).catch(err => console.log(err))
         }
         this.displayFacebox(this.calculateFaceLocation
           (response.outputs[0].data.regions[0].region_info.bounding_box))
@@ -103,7 +108,7 @@ class App extends React.Component {
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({ isSignedIn: false })
+      this.setState(initialState)
     } else if (route === 'home') {
       this.setState({ isSignedIn: true })
     }
@@ -113,7 +118,7 @@ class App extends React.Component {
   render() {
     return (
 
-      <div className="App">
+      <div className="App" >
         <Naviagation isSignedIn={this.state.isSignedIn} onRouteChange={this.onRouteChange} />
         {this.state.route === 'home'
           ? <div>
@@ -130,7 +135,7 @@ class App extends React.Component {
           )
         }
 
-      </div>
+      </div >
     );
   }
 }
